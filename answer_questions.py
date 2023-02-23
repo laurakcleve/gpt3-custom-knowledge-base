@@ -45,7 +45,7 @@ if __name__ == '__main__':
 
     # Get the embedding vector for the query
     response = openai.Embedding.create(input=query,
-                                       engine='text-similarity-ada-001')
+                                       engine='text-embedding-ada-002')
     query_vector = response['data'][0]['embedding']
 
     # `scores` will store a value for each chunk, representing

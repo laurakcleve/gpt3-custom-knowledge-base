@@ -38,7 +38,7 @@ if __name__ == '__main__':
   for chunk in chunks:
     # response gives a big nested object and all we need off it is the embedding (vector)
     response = openai.Embedding.create(input=chunk,
-                                       engine='text-similarity-ada-001')
+                                       engine='text-embedding-ada-002')
     vector = response['data'][0]['embedding']
 
     # Usage just for informational purposes
