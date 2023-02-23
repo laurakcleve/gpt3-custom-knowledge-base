@@ -20,17 +20,19 @@ summary_prompt = ("Write a detailed summary of the following:\n\n"
                   "DETAILED SUMMARY: ")
 
 
-def similarity(v1, v2):  # return dot product of two vectors
+def similarity(v1, v2):
   return numpy.dot(v1, v2)
 
 
-# TODO - create separate logging methods for the initial methods and the summary,
-# and add the type to the filename. Also log usage
-
-
-def write_log(data):
+def write_answer_log(data):
   timestamp_str = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-  with open(f'./output/output_{timestamp_str}.txt', 'w') as f:
+  with open(f'./output/{timestamp_str}_single-answer.txt', 'w') as f:
+    f.write(data)
+
+
+def write_summary_log(data):
+  timestamp_str = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+  with open(f'./output/{timestamp_str}_final-summary.txt', 'w') as f:
     f.write(data)
 
 
@@ -79,13 +81,20 @@ if __name__ == '__main__':
                                                      stop=['<<END>>'])
       answer_text = completion_response['choices'][0]['text'].strip()
 
-      write_log('PROMPT:\n\n' + prompt + '\n\nRESPONSE:\n\n' + answer_text)
+      total_tokens = completion_response['usage']['total_tokens']
+      write_answer_log(f'USAGE: {total_tokens}\n\n'
+                       'PROMPT:\n\n'
+                       f'{prompt}\n\n'
+                       'RESPONSE:\n\n'
+                       f'{answer_text}')
 
       answers.append(answer_text)
 
     # Compile all the answers together to give to gpt to summarize
     all_answers = '\n\n'.join(answers)
+
     final_prompt = summary_prompt.replace('<<SUMMARY>>', all_answers)
+
     summary_completion_response = openai.Completion.create(
         engine='text-davinci-003',
         prompt=final_prompt,
@@ -95,6 +104,17 @@ if __name__ == '__main__':
         frequency_penalty=0.25,
         presence_penalty=0.0,
         stop=['<<END>>'])
+
     summary_text = summary_completion_response['choices'][0]['text'].strip()
 
-    write_log('QUESTION: ' + query + '\n\n' + 'ANSWER: ' + summary_text)
+    total_summary_tokens = summary_completion_response['usage']['total_tokens']
+
+    write_summary_log(f'USAGE: {total_summary_tokens}\n\n'
+                      'QUESTION:\n\n'
+                      f'{query}\n\n'
+                      'SUMMARY PROMPT:\n\n'
+                      f'{final_prompt}\n\n'
+                      'ANSWER:\n\n'
+                      f'{summary_text}')
+
+    print(f'\n{summary_text}\n\n')

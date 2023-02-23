@@ -10,10 +10,11 @@ load_dotenv()
 openai.api_key = os.environ['OPENAI_API_KEY']
 
 
-def write_log(index):
-  json_string = json.dumps(index)
+def write_log(index, tokens_used):
+  output = {'tokens_used': tokens_used, 'index': index}
+  json_string = json.dumps(output)
   timestamp_str = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
-  with open(f'./output/output_{timestamp_str}.json', 'w') as f:
+  with open(f'./output/{timestamp_str}_build-index.json', 'w') as f:
     f.write(json_string)
 
 
@@ -31,6 +32,7 @@ if __name__ == '__main__':
   chunks = textwrap.wrap(allText, 4000)
 
   index = list()
+  total_tokens = 0
 
   # Send each of the chunks to get a matching vector
   for chunk in chunks:
@@ -39,7 +41,10 @@ if __name__ == '__main__':
                                        engine='text-similarity-ada-001')
     vector = response['data'][0]['embedding']
 
+    # Usage just for informational purposes
+    total_tokens += response['usage']['total_tokens']
+
     index.append({'content': chunk, 'vector': vector})
 
-  write_log(index)
+  write_log(index, tokens_used=total_tokens)
   write_index(index)
