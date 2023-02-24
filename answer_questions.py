@@ -9,15 +9,31 @@ load_dotenv()
 
 openai.api_key = os.environ['OPENAI_API_KEY']
 
-qa_prompt = (
-    "Use the following passage to give a concise answer to the following question, disregarding any irrelevant information. If there is no relevant information in the passage, say nothing.\n\n"
-    "QUESTION: <<QUERY>>\n\n"
-    "PASSAGE: <<PASSAGE>>\n\n"
-    "ANSWER: ")
+QA_PROMPT = (
+    "You will be given an excerpt out of a glossary. This glossary is for the "
+    "rules of a board game. Answer the question given using only the "
+    "information below, as if you have no prior information about the question. "
+    "Give a thorough and detailed answer if you can, including all relevant "
+    "information. This is only a small portion of the rules, so the answer may "
+    "not appear in the excerpt I give you. If there is no mention of anything "
+    "related to the question in the excerpt, respond with \"-\"."
+    "\n\n"
+    "GLOSSARY EXCERPT:\n"
+    "---\n"
+    "<<PASSAGE>>\n"
+    "---"
+    "\n\n"
+    "QUESTION:\n"
+    "<<QUERY>>"
+    "\n\n"
+    "ANSWER:")
 
-summary_prompt = ("Write a detailed summary of the following:\n\n"
-                  "<<SUMMARY>>\n\n"
-                  "DETAILED SUMMARY: ")
+SUMMARY_PROMPT = (
+    "Compile the statements below into a single comprehensive answer:"
+    "\n\n"
+    "<<ANSWERS>>"
+    "\n\n"
+    "COMPILED ANSWER:")
 
 
 def similarity(v1, v2):
@@ -68,13 +84,13 @@ if __name__ == '__main__':
 
     # Answer the question using each chunk in turn
     for chunk in most_relevant_chunks:
-      prompt = qa_prompt.replace('<<PASSAGE>>',
+      prompt = QA_PROMPT.replace('<<PASSAGE>>',
                                  chunk['content']).replace('<<QUERY>>', query)
 
       completion_response = openai.Completion.create(engine='text-davinci-003',
                                                      prompt=prompt,
-                                                     temperature=0.6,
-                                                     max_tokens=2000,
+                                                     temperature=0.0,
+                                                     max_tokens=300,
                                                      top_p=1.0,
                                                      frequency_penalty=0.25,
                                                      presence_penalty=0.0,
@@ -93,13 +109,13 @@ if __name__ == '__main__':
     # Compile all the answers together to give to gpt to summarize
     all_answers = '\n\n'.join(answers)
 
-    final_prompt = summary_prompt.replace('<<SUMMARY>>', all_answers)
+    final_prompt = SUMMARY_PROMPT.replace('<<ANSWERS>>', all_answers)
 
     summary_completion_response = openai.Completion.create(
         engine='text-davinci-003',
         prompt=final_prompt,
-        temperature=0.6,
-        max_tokens=2000,
+        temperature=0.0,
+        max_tokens=300,
         top_p=1.0,
         frequency_penalty=0.25,
         presence_penalty=0.0,
