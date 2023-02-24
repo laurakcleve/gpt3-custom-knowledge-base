@@ -10,6 +10,21 @@ load_dotenv()
 openai.api_key = os.environ['OPENAI_API_KEY']
 
 
+def log_chunks(chunks):
+  # Create folder structure based on timestamp
+  timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+  output_folder = f"output/chunks/{timestamp}"
+  if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
+
+  # Loop over chunks and write each one to its own file in the output folder
+  for i, chunk in enumerate(chunks):
+    filename = f"chunk_{i}.txt"
+    filepath = os.path.join(output_folder, filename)
+    with open(filepath, 'w') as file:
+      file.write(chunk)
+
+
 def write_log(index, tokens_used):
   output = {'tokens_used': tokens_used, 'index': index}
   json_string = json.dumps(output)
@@ -29,7 +44,22 @@ if __name__ == '__main__':
   # Split the input file into chunks
   with open('input.txt', 'r') as file:
     allText = file.read()
-  chunks = textwrap.wrap(allText, 4000)
+
+  max_chunk_size = 16000
+
+  chunks = []
+
+  current_chunk = ""
+  for line in allText.splitlines():
+    if len(current_chunk + line) > max_chunk_size:
+      chunks.append(current_chunk.strip())
+      current_chunk = ""
+    current_chunk += line + "\n"
+
+  if current_chunk:
+    chunks.append(current_chunk.strip())
+
+  log_chunks(chunks)
 
   index = list()
   total_tokens = 0

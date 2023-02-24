@@ -40,6 +40,12 @@ def similarity(v1, v2):
   return numpy.dot(v1, v2)
 
 
+def write_query_embedding_log(data):
+  timestamp_str = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
+  with open(f'./output/{timestamp_str}_query-embedding.txt', 'w') as f:
+    f.write(data)
+
+
 def write_answer_log(data):
   timestamp_str = datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
   with open(f'./output/{timestamp_str}_single-answer.txt', 'w') as f:
@@ -63,6 +69,13 @@ if __name__ == '__main__':
     response = openai.Embedding.create(input=query,
                                        engine='text-embedding-ada-002')
     query_vector = response['data'][0]['embedding']
+
+    query_embedding_usage = response['usage']['total_tokens']
+    write_query_embedding_log(f'USAGE: {query_embedding_usage}\n\n'
+                              'QUERY:\n\n'
+                              f'{query}\n\n'
+                              'VECTOR:\n\n'
+                              f'{query_vector}')
 
     # `scores` will store a value for each chunk, representing
     # how similar it is to the query
